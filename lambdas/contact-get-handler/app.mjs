@@ -3,24 +3,18 @@ import { fromNodeProviderChain } from "@aws-sdk/credential-providers";
 
 const isLocal = !!process.env.SFN_ENDPOINT;
 
-const stepFunctionsClient = new SFNClient({
-  region: process.env.AWS_REGION || "us-west-2",
-  ...(isLocal && {
-    endpoint: process.env.SFN_ENDPOINT,
-    credentials: {
-      accessKeyId: "dummy",
-      secretAccessKey: "dummy"
-    }
-  })
-});
-
-if (isLocal) {
-  fromNodeProviderChain()().then((creds) => {
-    console.log("🕵️‍♂️ Resolved credentials inside Lambda:", creds);
-  }).catch((err) => {
-    console.error("❌ Failed to resolve credentials:", err);
-  });
-}
+const stepFunctionsClient = isLocal
+  ? new SFNClient({
+      region: process.env.AWS_REGION || "us-west-2",
+      endpoint: process.env.SFN_ENDPOINT,
+      credentials: {
+        accessKeyId: "dummy",
+        secretAccessKey: "dummy"
+      }
+    })
+  : new SFNClient({
+      region: process.env.AWS_REGION || "us-west-2"
+    });
 
 const stepFunctionArn = process.env.CONTACT_MATCH_SFN_ARN;
 
