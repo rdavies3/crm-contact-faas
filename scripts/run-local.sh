@@ -23,7 +23,7 @@ aws --endpoint-url http://localhost:8083 stepfunctions create-state-machine \
 
 echo "🚀 Invoking Lambda with env: $ENV"
 unset AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY AWS_SESSION_TOKEN
-AWS_PROFILE=sfdev-sandbox sam local invoke ContactGetHandler \
+sam local invoke ContactGetHandler \
   --env-vars $ENV_FILE \
   -e events/test-get-contact-asuriteid.json
 

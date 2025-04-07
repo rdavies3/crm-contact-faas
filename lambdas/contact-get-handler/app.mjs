@@ -1,4 +1,5 @@
 import { SFNClient, StartExecutionCommand } from "@aws-sdk/client-sfn";
+import { fromNodeProviderChain } from "@aws-sdk/credential-providers";
 
 const isLocal = !!process.env.SFN_ENDPOINT;
 
@@ -13,39 +14,29 @@ const stepFunctionsClient = new SFNClient({
   })
 });
 
+if (isLocal) {
+  fromNodeProviderChain()().then((creds) => {
+    console.log("🕵️‍♂️ Resolved credentials inside Lambda:", creds);
+  }).catch((err) => {
+    console.error("❌ Failed to resolve credentials:", err);
+  });
+}
+
 const stepFunctionArn = process.env.CONTACT_MATCH_SFN_ARN;
 
 const strategyMatchers = [
-  {
-    id: "asurite",
-    required: ["asurite"]
-  },
-  {
-    id: "firstname_email",
-    required: ["firstname", "email"]
-  },
-  {
-    id: "name_birthdate_postalcode",
-    required: ["firstname", "lastname", "birthdate", "postalcode"]
-  },
-  {
-    id: "name_phone",
-    required: ["firstname", "lastname", "phone"]
-  },
-  {
-    id: "name_address",
-    required: ["firstname", "lastname", "postalcode", "street"]
-  }
+  { id: "asurite", required: ["asurite"] },
+  { id: "firstname_email", required: ["firstname", "email"] },
+  { id: "name_birthdate_postalcode", required: ["firstname", "lastname", "birthdate", "postalcode"] },
+  { id: "name_phone", required: ["firstname", "lastname", "phone"] },
+  { id: "name_address", required: ["firstname", "lastname", "postalcode", "street"] }
 ];
 
 export const handler = async (event) => {
   const queryParams = event.queryStringParameters || {};
-  const matchedPaths = [];
-
-  for (const matcher of strategyMatchers) {
-    const hasAll = matcher.required.every((key) => queryParams[key]);
-    if (hasAll) matchedPaths.push(matcher.id);
-  }
+  const matchedPaths = strategyMatchers
+    .filter(m => m.required.every(k => queryParams[k]))
+    .map(m => m.id);
 
   if (matchedPaths.length === 0) {
     return {
@@ -55,8 +46,6 @@ export const handler = async (event) => {
       })
     };
   }
-
-  const client = stepFunctionsClient;
 
   const input = {
     matchedPaths,
@@ -69,7 +58,7 @@ export const handler = async (event) => {
   });
 
   try {
-    const response = await client.send(command);
+    const response = await stepFunctionsClient.send(command);
     return {
       statusCode: 202,
       body: JSON.stringify({
