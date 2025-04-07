@@ -10,7 +10,6 @@ Globals:
       - x86_64
 
 Resources:
-
   ContactGetHandler:
     Type: AWS::Serverless::Function
     Properties:
