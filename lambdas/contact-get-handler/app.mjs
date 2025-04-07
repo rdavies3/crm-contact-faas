@@ -2,8 +2,19 @@ import { SFNClient, StartExecutionCommand } from "@aws-sdk/client-sfn";
 import { fromNodeProviderChain } from "@aws-sdk/credential-providers";
 
 const isLocal = !!process.env.SFN_ENDPOINT;
-
 const stepFunctionArn = process.env.CONTACT_MATCH_SFN_ARN;
+
+const dummyCredentialProvider = async () => ({
+  accessKeyId: "dummy",
+  secretAccessKey: "dummy",
+  sessionToken: "dummy"
+});
+
+const stepFunctionsClient = new SFNClient({
+  region: process.env.AWS_REGION || "us-west-2",
+  ...(isLocal && { endpoint: process.env.SFN_ENDPOINT }),
+  credentials: isLocal ? dummyCredentialProvider : undefined
+});
 
 const strategyMatchers = [
   { id: "asurite", required: ["asurite"] },
@@ -12,19 +23,6 @@ const strategyMatchers = [
   { id: "name_phone", required: ["firstname", "lastname", "phone"] },
   { id: "name_address", required: ["firstname", "lastname", "postalcode", "street"] }
 ];
-
-const stepFunctionsClient = isLocal
-  ? new SFNClient({
-      region: process.env.AWS_REGION || "us-west-2",
-      endpoint: process.env.SFN_ENDPOINT,
-      credentials: {
-        accessKeyId: "dummy",
-        secretAccessKey: "dummy"
-      }
-    })
-  : new SFNClient({
-      region: process.env.AWS_REGION || "us-west-2"
-    });
 
 export const handler = async (event) => {
   if (isLocal) {
