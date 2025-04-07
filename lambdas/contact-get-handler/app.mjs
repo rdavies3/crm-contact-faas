@@ -1,20 +1,12 @@
 import { SFNClient, StartExecutionCommand } from "@aws-sdk/client-sfn";
 
-const isLocal = !!process.env.SFN_ENDPOINT;
 const stepFunctionArn = process.env.CONTACT_MATCH_SFN_ARN;
+const awsRegion = process.env.AWS_REGION;
 
-const dummyCredentials = {
-  accessKeyId: "dummy",
-  secretAccessKey: "dummy",
-  sessionToken: "dummy"
-};
+console.log("🔍 CONTACT_MATCH_SFN_ARN =", process.env.CONTACT_MATCH_SFN_ARN);
 
 const stepFunctionsClient = new SFNClient({
-  region: process.env.AWS_REGION || "us-west-2",
-  ...(isLocal && {
-    endpoint: process.env.SFN_ENDPOINT,
-    credentials: async () => dummyCredentials
-  })
+  region: awsRegion
 });
 
 const strategyMatchers = [
@@ -26,8 +18,6 @@ const strategyMatchers = [
 ];
 
 export const handler = async (event) => {
-  console.log("🧪 SFN_ENDPOINT:", process.env.SFN_ENDPOINT);
-
   const queryParams = event.queryStringParameters || {};
   const matchedPaths = strategyMatchers
     .filter(m => m.required.every(k => queryParams[k]))

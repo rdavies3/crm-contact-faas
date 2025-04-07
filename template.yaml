@@ -17,13 +17,19 @@ Resources:
       CodeUri: lambdas/contact-get-handler/
       Environment:
         Variables:
-          CONTACT_MATCH_SFN_ARN: arn:aws:states:us-west-2:982081057374:stateMachine:contact-parallel-query
+          CONTACT_MATCH_SFN_ARN: ""
+          AWS_REGION: ""
       Events:
         ContactApi:
           Type: Api
           Properties:
             Path: /contact
             Method: get
+  FormatContactOutput:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: app.handler
+      CodeUri: lambdas/format-contact-output/
 
 Outputs:
   ContactGetHandlerArn:

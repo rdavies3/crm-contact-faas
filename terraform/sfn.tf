@@ -31,13 +31,13 @@ resource "aws_iam_role_policy" "sfn_invoke_sf_query" {
 
 # Deploy the Step Function
 resource "aws_sfn_state_machine" "contact_match" {
-  name       = "contact-parallel-query"
-  role_arn   = aws_iam_role.contact_match_sfn_role.arn
-  definition = file("${path.module}/statemachines/contact-parallel-query.asl.json")
+  name     = "contact-parallel-query-${var.environment}"
+  role_arn = aws_iam_role.contact_match_sfn_role.arn
 
-  tags = {
-    product = var.product_key
-  }
+  definition = templatefile("${path.module}/statemachines/contact-parallel-query.asl.json", {
+    sf_query_lambda_arn  = "arn:aws:lambda:${var.aws_region}:${var.aws_account_number}:function:sf-query-${var.environment}"
+    formatter_lambda_arn = "arn:aws:lambda:${var.aws_region}:${var.aws_account_number}:function:format-contact-output-${var.environment}"
+  })
 }
 
 resource "aws_iam_policy" "can_start_contact_match" {
