@@ -5,7 +5,7 @@ info:
   description: >
     API for searching Salesforce Contact records using multiple strategies.
     This endpoint supports legacy Mulesoft compatibility (`/contact`) and will evolve in a future version.
-    
+
     One of the following valid query combinations **must** be provided:
       - `asurite`
       - `firstname` + `email`

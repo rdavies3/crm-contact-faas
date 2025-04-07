@@ -22,6 +22,7 @@ aws --endpoint-url http://localhost:8083 stepfunctions create-state-machine \
   --role-arn arn:aws:iam::012345678901:role/DummyExecutionRole > /dev/null
 
 echo "🚀 Invoking Lambda with env: $ENV"
+unset AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY AWS_SESSION_TOKEN
 AWS_PROFILE=sfdev-sandbox sam local invoke ContactGetHandler \
   --env-vars $ENV_FILE \
   -e events/test-get-contact-asuriteid.json
