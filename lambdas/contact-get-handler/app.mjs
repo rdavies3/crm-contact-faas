@@ -1,21 +1,20 @@
-console.log("🧪 Lambda environment:", JSON.stringify(process.env, null, 2));
-
 import { SFNClient, StartExecutionCommand } from "@aws-sdk/client-sfn";
-import { fromNodeProviderChain } from "@aws-sdk/credential-providers";
 
 const isLocal = !!process.env.SFN_ENDPOINT;
 const stepFunctionArn = process.env.CONTACT_MATCH_SFN_ARN;
 
-const dummyCredentialProvider = async () => ({
+const dummyCredentials = {
   accessKeyId: "dummy",
   secretAccessKey: "dummy",
   sessionToken: "dummy"
-});
+};
 
 const stepFunctionsClient = new SFNClient({
   region: process.env.AWS_REGION || "us-west-2",
-  ...(isLocal && { endpoint: process.env.SFN_ENDPOINT }),
-  credentials: isLocal ? dummyCredentialProvider : undefined
+  ...(isLocal && {
+    endpoint: process.env.SFN_ENDPOINT,
+    credentials: async () => dummyCredentials
+  })
 });
 
 const strategyMatchers = [
@@ -27,14 +26,7 @@ const strategyMatchers = [
 ];
 
 export const handler = async (event) => {
-  if (isLocal) {
-    try {
-      const creds = await fromNodeProviderChain()();
-      console.log("🔍 Resolved credential source in Lambda:", creds);
-    } catch (err) {
-      console.error("❌ Failed to resolve credentials in Lambda:", err);
-    }
-  }
+  console.log("🧪 SFN_ENDPOINT:", process.env.SFN_ENDPOINT);
 
   const queryParams = event.queryStringParameters || {};
   const matchedPaths = strategyMatchers
