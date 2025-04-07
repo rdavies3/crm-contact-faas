@@ -1,0 +1,54 @@
+{
+    "Comment": "Step Function to run Salesforce contact match strategies in parallel",
+    "StartAt": "ParallelMatches",
+    "States": {
+        "ParallelMatches": {
+            "Type": "Map",
+            "ItemsPath": "$.matchedPaths",
+            "Parameters": {
+                "strategy.$": "$$.Map.Item.Value",
+                "queryParams.$": "$.queryParams"
+            },
+            "Iterator": {
+                "StartAt": "FormatQuery",
+                "States": {
+                    "FormatQuery": {
+                        "Type": "Pass",
+                        "ResultPath": "$.formatted",
+                        "Parameters": {
+                            "strategy.$": "$.strategy",
+                            "soql.$": "States.Format('SELECT AccountId, Affiliation_Student__c, ASURite_ID__c, Birthdate, Country_of_Citizenship__r.Name, Country_of_Citizenship__r.ISO_Code__c, Country_of_Citizenship__c, CreatedDate, Email, EMPLID__c, Ethnicity__c, FirstName, Gender__c, Id, HomePhone, Language_Spoken_At_Home__c, LastName, Lead_Email__c, MailingAddress, Middle_Name__c, MobilePhone, OtherAddress, Other_Contact_Type__c, Parent_Email__c, Phone, Work_Phone__c, RecordTypeId, RecordType.Name, Self_Reported_ASU_Student_Alum__c, SSB_CRMSYSTEM_ACCT_ID__c, SMS_Phone__c FROM Contact WHERE {}', $.strategy)"
+                        },
+                        "Next": "InvokeSfQuery"
+                    },
+                    "InvokeSfQuery": {
+                        "Type": "Task",
+                        "Resource": "arn:aws:lambda:us-west-2:982081057374:function:sf-query-sandbox",
+                        "InputPath": "$.formatted",
+                        "ResultPath": "$.response",
+                        "Next": "AddConfidenceAndMeta"
+                    },
+                    "AddConfidenceAndMeta": {
+                        "Type": "Pass",
+                        "Parameters": {
+                            "source.$": "$.strategy",
+                            "confidence": 0.85,
+                            "durationMs": 150,
+                            "results.$": "$.response"
+                        },
+                        "End": true
+                    }
+                }
+            },
+            "ResultPath": "$.matchResults",
+            "Next": "SortAndReturn"
+        },
+        "SortAndReturn": {
+            "Type": "Pass",
+            "Parameters": {
+                "matches.$": "$.matchResults"
+            },
+            "End": true
+        }
+    }
+}

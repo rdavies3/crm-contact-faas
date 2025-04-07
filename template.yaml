@@ -1,0 +1,32 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: CRM Contact FaaS - Contact Matching Handler
+
+Globals:
+  Function:
+    Timeout: 10
+    Runtime: nodejs20.x
+    Architectures:
+      - x86_64
+
+Resources:
+
+  ContactGetHandler:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: app.handler
+      CodeUri: lambdas/contact-get-handler/
+      Environment:
+        Variables:
+          CONTACT_MATCH_SFN_ARN: arn:aws:states:us-west-2:982081057374:stateMachine:contact-parallel-query
+      Events:
+        ContactApi:
+          Type: Api
+          Properties:
+            Path: /contact
+            Method: get
+
+Outputs:
+  ContactGetHandlerArn:
+    Description: "ARN of Contact GET handler Lambda"
+    Value: !GetAtt ContactGetHandler.Arn

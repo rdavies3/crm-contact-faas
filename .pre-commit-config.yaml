@@ -1,0 +1,24 @@
+---
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.6.0
+    hooks:
+      - id: end-of-file-fixer
+      - id: trailing-whitespace
+      - id: mixed-line-ending
+      - id: check-json
+      - id: check-yaml
+        exclude: template\.yaml
+        args:
+          - --allow-multiple-documents
+  - repo: https://github.com/aws-cloudformation/cfn-lint
+    rev: v0.85.0
+    hooks:
+      - id: cfn-lint
+        files: template\.yaml
+
+  - repo: https://github.com/antonbabenko/pre-commit-terraform
+    rev: v1.89.1
+    hooks:
+      - id: terraform_fmt
+      - id: terraform_docs

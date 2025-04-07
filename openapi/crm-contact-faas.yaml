@@ -1,0 +1,115 @@
+openapi: 3.0.3
+info:
+  title: CRM Contact FaaS API
+  version: 1.0.0
+  description: >
+    API for searching Salesforce Contact records using multiple strategies.
+    This endpoint supports legacy Mulesoft compatibility (`/contact`) and will evolve in a future version.
+    
+    One of the following valid query combinations **must** be provided:
+      - `asurite`
+      - `firstname` + `email`
+      - `firstname` + `lastname` + `birthdate` + `postalcode`
+      - `firstname` + `lastname` + `phone`
+      - `firstname` + `lastname` + `postalcode` + `street`
+
+    If no valid combination is provided, the request will be rejected by the handler.
+
+paths:
+  /contact:
+    get:
+      summary: Search for a Salesforce Contact
+      operationId: getContact
+      parameters:
+        - in: query
+          name: asurite
+          schema:
+            type: string
+            example: rdavies3
+          description: ASURite ID (e.g., ASURite_ID__c)
+
+        - in: query
+          name: firstname
+          schema:
+            type: string
+            minLength: 1
+            maxLength: 40
+            example: Rosalind
+          description: First name of the contact
+
+        - in: query
+          name: lastname
+          schema:
+            type: string
+            minLength: 1
+            maxLength: 80
+            example: Davies
+          description: Last name of the contact
+
+        - in: query
+          name: email
+          schema:
+            type: string
+            format: email
+            example: rozy@oenologee.com
+          description: Email address of the contact
+
+        - in: query
+          name: birthdate
+          schema:
+            type: string
+            pattern: '^[0-9]{4}-[0-1][0-9]-[0-3][0-9]$'
+            example: 2000-01-01
+          description: Birthdate in YYYY-MM-DD format
+
+        - in: query
+          name: phone
+          schema:
+            type: string
+            example: '(555) 123-4567'
+          description: Phone number
+
+        - in: query
+          name: postalcode
+          schema:
+            type: string
+            example: '85281'
+          description: Mailing ZIP or postal code
+
+        - in: query
+          name: street
+          schema:
+            type: string
+            example: '123 Test Dr'
+          description: Mailing street address
+
+      responses:
+        '200':
+          description: List of matched contacts ordered by confidence score
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  required: [confidence, source, contact]
+                  properties:
+                    confidence:
+                      type: number
+                      format: float
+                      description: Matching confidence score (0.0–1.0)
+                      example: 0.95
+                    source:
+                      type: string
+                      description: Match strategy used
+                      example: "asurite"
+                    contact:
+                      type: object
+                      description: Raw Salesforce Contact record
+
+        '400':
+          description: Missing or invalid query parameter combination
+        '500':
+          description: Internal server error
+
+components: {}
