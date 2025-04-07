@@ -1,3 +1,5 @@
+console.log("🧪 Lambda environment:", JSON.stringify(process.env, null, 2));
+
 import { SFNClient, StartExecutionCommand } from "@aws-sdk/client-sfn";
 import { fromNodeProviderChain } from "@aws-sdk/credential-providers";
 
