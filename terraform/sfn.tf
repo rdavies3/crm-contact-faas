@@ -34,7 +34,7 @@ resource "aws_sfn_state_machine" "contact_match" {
   name     = "contact-parallel-query-${var.environment}"
   role_arn = aws_iam_role.contact_match_sfn_role.arn
 
-  definition = templatefile("${path.module}/statemachines/contact-parallel-query.asl.json", {
+  definition = templatefile("${path.module}/../statemachines/contact-parallel-query.asl.json", {
     sf_query_lambda_arn  = "arn:aws:lambda:${var.aws_region}:${var.aws_account_number}:function:sf-query-${var.environment}"
     formatter_lambda_arn = "arn:aws:lambda:${var.aws_region}:${var.aws_account_number}:function:format-contact-output-${var.environment}"
   })

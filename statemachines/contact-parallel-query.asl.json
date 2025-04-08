@@ -1,5 +1,5 @@
 {
-  "Comment": "Step Function to run Salesforce contact match strategies in parallel with pre-built SOQL queries",
+  "Comment": "Step Function to run Salesforce contact match strategies in parallel and format results",
   "StartAt": "ParallelMatches",
   "States": {
     "ParallelMatches": {
@@ -14,7 +14,7 @@
         "States": {
           "InvokeSfQuery": {
             "Type": "Task",
-            "Resource": "arn:aws:lambda:us-west-2:982081057374:function:sf-query-sandbox",
+            "Resource": "${sf_query_lambda_arn}",
             "Parameters": {
               "query.$": "$.soql"
             },
@@ -34,13 +34,15 @@
         }
       },
       "ResultPath": "$.matchResults",
-      "Next": "SortAndReturn"
+      "Next": "FormatOutput"
     },
-    "SortAndReturn": {
-      "Type": "Pass",
+    "FormatOutput": {
+      "Type": "Task",
+      "Resource": "${formatter_lambda_arn}",
       "Parameters": {
         "matches.$": "$.matchResults"
       },
+      "ResultPath": "$.formatted",
       "End": true
     }
   }
